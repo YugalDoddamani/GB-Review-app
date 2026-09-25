@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leave a review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --content-primary: #18181b; --content-secondary: #52525b; --content-muted: #a1a1aa;
+    --fill-inverse: #18181b; --fill-subtle: #f4f4f5; --line-default: #e4e4e7;
+    --surface: #ffffff; --radius: 8px;
+    --brand: #b45309; --brand-soft: #fef3e7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif; color: var(--content-primary);
+    background: var(--fill-subtle); min-height: 100vh;
+    display: flex; justify-content: center; padding: 24px 16px 48px;
+  }
+  .page { width: 100%; max-width: 440px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--line-default);
+    border-radius: var(--radius); box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    padding: 28px 24px;
+  }
+  .business-header { text-align: center; margin-bottom: 28px; }
+  .business-logo {
+    width: 56px; height: 56px; border-radius: var(--radius);
+    background: var(--brand-soft); color: var(--brand);
+    font-weight: 600; font-size: 20px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 12px;
+  }
+  .business-name { font-size: 18px; font-weight: 600; }
+  .step-label { font-size: 12px; color: var(--content-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
+  .step { display: none; }
+  .step.active { display: block; animation: fadein 0.2s ease; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; } }
+  .step-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+  .step-hint { font-size: 14px; color: var(--content-secondary); margin-bottom: 20px; }
+  .stars { display: flex; justify-content: center; gap: 8px; margin: 8px 0 24px; }
+  .star {
+    font-size: 40px; line-height: 1; cursor: pointer; color: var(--line-default);
+    background: none; border: none; transition: color 0.1s, transform 0.1s; padding: 4px;
+  }
+  .star:hover { transform: scale(1.1); }
+  .star.filled { color: var(--brand); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    font-family: inherit; font-size: 14px; padding: 8px 14px; border-radius: 999px;
+    border: 1px solid var(--line-default); background: var(--surface);
+    color: var(--content-secondary); cursor: pointer; transition: all 0.1s;
+  }
+  .chip:hover { border-color: var(--content-muted); }
+  .chip.selected { background: var(--brand-soft); border-color: var(--brand); color: var(--brand); font-weight: 500; }
+  .btn {
+    font-family: inherit; font-size: 14px; font-weight: 500;
+    border-radius: var(--radius); cursor: pointer; padding: 12px 20px; transition: opacity 0.1s;
+  }
+  .btn-primary { background: var(--fill-inverse); color: #fff; border: none; width: 100%; }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-brand { background: var(--brand); color: #fff; border: none; width: 100%; }
+  .btn-ghost { background: none; border: none; color: var(--content-muted); font-size: 13px; width: 100%; margin-top: 12px; padding: 8px; }
+  .btn-ghost:hover { color: var(--content-secondary); }
+  .review-textarea {
+    font-family: inherit; font-size: 14px; line-height: 1.6;
+    width: 100%; min-height: 140px; padding: 14px; border-radius: var(--radius);
+    border: 1px solid var(--line-default); color: var(--content-primary); resize: vertical;
+  }
+  .review-textarea:focus { outline: 2px solid var(--brand); outline-offset: -1px; }
+  .mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--content-muted); }
+  .footer-note { text-align: center; font-size: 12px; color: var(--content-muted); margin-top: 20px; line-height: 1.5; }
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--fill-inverse); color: #fff; font-size: 13px;
+    padding: 10px 18px; border-radius: 999px; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="business-header">
+    <div class="business-logo" id="logo">C</div>
+    <div class="business-name" id="bizName"></div>
+    <div class="step-label" id="stepLabel">Step 1 of 3 · How was your visit?</div>
+  </div>
+  <div class="card">
+    <div class="step active" id="step1">
+      <div class="step-title">How was your experience?</div>
+      <div class="step-hint">Tap a star — your honest feedback helps us improve.</div>
+      <div class="stars" id="stars"></div>
+    </div>
+    <div class="step" id="step2">
+      <div class="step-title" id="tagsTitle">What stood out?</div>
+      <div class="step-hint" id="tagsHint">Pick anything that applies — or skip.</div>
+      <div class="chips" id="chips"></div>
+      <button class="btn btn-primary" id="tagsNext" style="margin-top:24px">Continue</button>
+      <button class="btn btn-ghost" id="tagsSkip">Skip this step</button>
+    </div>
+    <div class="step" id="step3">
+      <div class="step-title">Your review</div>
+      <div class="step-hint">We've drafted a starting point — edit it freely, then continue to Google.</div>
+      <textarea class="review-textarea" id="reviewText"></textarea>
+      <button class="btn btn-primary" id="copyBtn" style="margin-top:16px">Copy to clipboard</button>
+      <button class="btn btn-brand" id="googleBtn" style="margin-top:8px">Continue to Google</button>
+      <div class="footer-note">Your review is posted on Google — we never filter or edit what you write.</div>
+    </div>
+  </div>
+  <div class="footer-note mono" id="placeNote"></div>
+</div>
+<div class="toast" id="toast">Copied to clipboard</div>
+
+<script>
+/* =========================================================
+   CONFIG CONTRACT — the single source of truth.
+   Priority: URL params (QR link / builder preview) →
+             localStorage (builder writes here) → defaults.
+   Later: URL param becomes a business ID → Supabase fetch.
+   ========================================================= */
+const DEFAULT_CONFIG = {
+  name: "Cedar & Vine Café",
+  place_id: "ChIJxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  brand_color: "#b45309",
+  logo_initial: "C",
+  positive_tags: ["Great coffee", "Friendly staff", "Cozy atmosphere", "Fast service", "Good pastries"],
+  improvement_tags: ["Slow service", "Order was wrong", "Too noisy", "Prices felt high", "Cleanliness"]
+};
+
+function loadConfig() {
+  // 1. URL params — how the QR link will deliver config
+  const params = new URLSearchParams(location.search);
+  if (params.has("b")) {
+    try { return { ...DEFAULT_CONFIG, ...JSON.parse(atob(params.get("b"))) }; } catch {}
+  }
+  // 2. localStorage — written by builder.html in prototype mode
+  try {
+    const saved = localStorage.getItem("qr_business_config");
+    if (saved) return { ...DEFAULT_CONFIG, ...JSON.parse(saved) };
+  } catch {}
+  // 3. Fallback
+  return DEFAULT_CONFIG;
+}
+
+let BUSINESS = loadConfig();
+let rating = 0, selectedTags = [];
+
+/* ---- Apply config to UI (called on load AND on builder updates) ---- */
+function applyConfig() {
+  document.getElementById("bizName").textContent = BUSINESS.name;
+  const logo = document.getElementById("logo");
+  logo.textContent = BUSINESS.logo_initial;
+  logo.style.background = hexToSoft(BUSINESS.brand_color);
+  logo.style.color = BUSINESS.brand_color;
+  document.documentElement.style.setProperty("--brand", BUSINESS.brand_color);
+  document.documentElement.style.setProperty("--brand-soft", hexToSoft(BUSINESS.brand_color));
+  document.getElementById("placeNote").textContent = "placeid: " + BUSINESS.place_id;
+  document.title = "Leave a review — " + BUSINESS.name;
+  resetFunnel();
+}
+
+/* ---- Builder hot-reload: builder.html postMessages new config ---- */
+window.addEventListener("message", (e) => {
+  if (e.data && e.data.type === "qr_config") {
+    BUSINESS = { ...DEFAULT_CONFIG, ...e.data.config };
+    applyConfig();
+  }
+});
+
+/* ---- Funnel logic (unchanged from validated prototype) ---- */
+const starsEl = document.getElementById("stars");
+for (let i = 1; i <= 5; i++) {
+  const b = document.createElement("button");
+  b.className = "star"; b.textContent = "★";
+  b.setAttribute("aria-label", i + " stars");
+  b.onclick = () => selectRating(i);
+  starsEl.appendChild(b);
+}
+
+function selectRating(n) {
+  rating = n;
+  [...starsEl.children].forEach((s, i) => s.classList.toggle("filled", i < n));
+  console.log("[review_event] rating:", n); // analytics later
+  setTimeout(() => gotoStep(2), 250);
+}
+
+function renderTags() {
+  const positive = rating >= 4;
+  const tags = positive ? BUSINESS.positive_tags : BUSINESS.improvement_tags;
+  document.getElementById("tagsTitle").textContent = positive ? "What stood out?" : "What could be better?";
+  document.getElementById("tagsHint").textContent = positive
+    ? "Pick anything that applies — or skip."
+    : "Your honest feedback helps us improve — pick anything that applies, or skip.";
+  const chipsEl = document.getElementById("chips");
+  chipsEl.innerHTML = ""; selectedTags = [];
+  tags.forEach(t => {
+    const c = document.createElement("button");
+    c.className = "chip"; c.textContent = t;
+    c.onclick = () => {
+      c.classList.toggle("selected");
+      if (c.classList.contains("selected")) selectedTags.push(t);
+      else selectedTags = selectedTags.filter(x => x !== t);
+    };
+    chipsEl.appendChild(c);
+  });
+}
+
+document.getElementById("tagsNext").onclick = () => { generateReview(); gotoStep(3); };
+document.getElementById("tagsSkip").onclick = () => { generateReview(); gotoStep(3); };
+
+function generateReview() {
+  const name = BUSINESS.name;
+  const openers = {
+    5: `I had an excellent experience at ${name} and would happily recommend it.`,
+    4: `I had a really good experience at ${name} and would recommend it.`,
+    3: `My visit to ${name} was solid overall, with some real highlights.`,
+    2: `My experience at ${name} fell short of expectations in a couple of ways.`,
+    1: `I was disappointed with my experience at ${name}.`
+  };
+  let text = openers[rating] || openers[3];
+  if (selectedTags.length) {
+    const list = selectedTags.map(t => t.toLowerCase()).join(", ");
+    text += rating >= 4
+      ? ` The ${list} really stood out.`
+      : ` Specifically, the ${list} could use some attention.`;
+  }
+  text += rating >= 4 ? " I'll definitely be back." : " I hope to see these improve on my next visit.";
+  document.getElementById("reviewText").value = text;
+}
+
+document.getElementById("copyBtn").onclick = async () => {
+  const text = document.getElementById("reviewText").value;
+  try { await navigator.clipboard.writeText(text); }
+  catch { const ta = document.getElementById("reviewText"); ta.select(); document.execCommand("copy"); }
+  showToast("Copied — paste it into Google");
+};
+
+document.getElementById("googleBtn").onclick = () => {
+  // Compliance: EVERY rating goes to Google. No branches, no exceptions.
+  window.open("https://search.google.com/local/writereview?placeid=" + BUSINESS.place_id, "_blank");
+  console.log("[review_event] handoff, rating:", rating, "tags:", selectedTags);
+};
+
+const stepLabels = ["Step 1 of 3 · How was your visit?", "Step 2 of 3 · A few details", "Step 3 of 3 · Your review"];
+function gotoStep(n) {
+  document.querySelectorAll(".step").forEach(s => s.classList.remove("active"));
+  document.getElementById("step" + n).classList.add("active");
+  document.getElementById("stepLabel").textContent = stepLabels[n - 1];
+  if (n === 2) renderTags();
+}
+
+function resetFunnel() {
+  rating = 0; selectedTags = [];
+  [...starsEl.children].forEach(s => s.classList.remove("filled"));
+  gotoStep(1);
+}
+
+function hexToSoft(hex) {
+  const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+  const mix = c => Math.round(c + (255 - c) * 0.88);
+  return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
+}
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2000);
+}
+
+applyConfig();
+</script>
+</body>
+</html>
