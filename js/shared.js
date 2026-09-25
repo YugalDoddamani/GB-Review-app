@@ -4,7 +4,7 @@
 const DEFAULT_CONFIG = {
   name: "Cedar & Vine Café",
   place_id: "ChIJxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-  brand_color: "#d97706",
+  brand_color:  "#18181b",
   logo_initial: "C",
   positive_tags: ["Great coffee", "Friendly staff", "Cozy atmosphere", "Fast service", "Good pastries"],
   improvement_tags: ["Slow service", "Order was wrong", "Too noisy", "Prices felt high", "Cleanliness"]
