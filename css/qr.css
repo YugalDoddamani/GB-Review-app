@@ -1,5 +1,5 @@
 body { display: flex; justify-content: center; padding: 40px 20px; min-height: 100vh; }
-.wrap { display: flex; gap: 24px; width: 100%; max-width: 980px; align-items: stretch; }
+.wrap { display: flex; gap: 28px; width: 100%; max-width: 1060px; align-items: flex-start; }
 
 .panel { flex: 1; padding: 30px 28px; animation: fade-slide 0.5s var(--ease-out) both; }
 .back-link { font-size: 13px; color: var(--content-muted); text-decoration: none; transition: color 0.2s; }
@@ -18,26 +18,63 @@ body { display: flex; justify-content: center; padding: 40px 20px; min-height: 1
   word-break: break-all; line-height: 1.5; max-height: 84px; overflow-y: auto;
 }
 
-.dl-row { display: flex; gap: 10px; margin-top: 26px; }
-.dl-row .btn { flex: 1; }
+.dl-row { display: flex; gap: 10px; margin-top: 26px; flex-wrap: wrap; }
+.dl-row .btn { flex: 1; min-width: 180px; }
 
-.preview {
-  width: 380px; flex-shrink: 0; padding: 36px 32px;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  position: relative;
-  animation: fade-slide 0.5s 0.1s var(--ease-out) both;
+/* ---- right: shareable card preview ---- */
+.preview-area {
+  width: 460px; flex-shrink: 0; position: relative;
+  display: flex; align-items: center; justify-content: center;
+  padding: 48px 0;
 }
 .preview-label {
-  position: absolute; top: 16px; left: 18px;
-  font-size: 11.5px; color: var(--content-muted); text-transform: uppercase; letter-spacing: 0.08em;
-}
-.qr-holder { transition: transform 0.3s var(--ease-spring); }
-.qr-holder:hover { transform: scale(1.03); }
-.qr-caption { margin-top: 18px; font-size: 15px; font-weight: 600; color: var(--content-primary); text-align: center; }
-
-@media (max-width: 860px) {
-  .wrap { flex-direction: column; }
-  .preview { width: auto; }
+  position: absolute; top: 12px; left: 4px;
+  font-size: 11.5px; color: var(--content-muted);
+  text-transform: uppercase; letter-spacing: 0.08em;
 }
 
-.field select.input { cursor: pointer; }
+/* the shareable card itself — 4:5 portrait, like a social post */
+.qr-card {
+  width: 420px; aspect-ratio: 4 / 5;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06), 0 16px 48px rgba(0,0,0,0.10);
+  border: 1px solid var(--line-default);
+  display: flex; flex-direction: column; align-items: center;
+  padding: 36px 32px 28px;
+  animation: fade-slide 0.5s 0.1s var(--ease-out) both;
+  transition: transform 0.3s var(--ease-out);
+}
+.qr-card:hover { transform: translateY(-3px); }
+
+.card-logo {
+  width: 72px; height: 72px; border-radius: 18px;
+  background: var(--surface-soft); border: 1px solid var(--line-default);
+  background-size: cover; background-position: center;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 600; font-size: 26px; color: var(--content-primary);
+  margin-bottom: 14px;
+}
+.card-name {
+  font-size: 20px; font-weight: 700; color: var(--content-primary);
+  text-align: center; line-height: 1.3; margin-bottom: 22px;
+}
+.card-qr {
+  width: 300px; height: 300px;
+  background: #fff;
+}
+.card-qr canvas, .card-qr img { width: 100% !important; height: 100% !important; display: block; }
+.card-caption {
+  margin-top: 24px; font-size: 16px; font-weight: 600; color: var(--content-primary);
+  text-align: center;
+}
+.card-footer {
+  margin-top: auto; padding-top: 18px;
+  font-size: 12px; color: var(--content-muted); text-align: center;
+}
+
+@media (max-width: 980px) {
+  .wrap { flex-direction: column; align-items: center; }
+  .preview-area { width: 100%; }
+  .qr-card { width: min(420px, 92vw); }
+}

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <title>Starling — QR Generator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/qr.css">
 </head>
@@ -13,8 +13,8 @@
 <div class="wrap">
   <div class="panel glass">
     <a class="back-link" href="builder.html">← Back to builder</a>
-    <h1>QR codes</h1>
-    <p class="sub">One code per location. Error correction is locked to level H so the logo overlay stays scannable.</p>
+    <h1>Review cards</h1>
+    <p class="sub">A shareable card per location — ready for print, WhatsApp status, or social posts. The logo sits above the code, so the QR itself stays clean and easy to scan.</p>
 
     <div class="field">
       <label for="qLocation">Location</label>
@@ -22,8 +22,14 @@
     </div>
 
     <div class="field">
-      <label for="qCaption">Caption under the code</label>
-      <input type="text" class="input" id="qCaption" value="Scan to leave us a review">
+      <label for="qCaption">Caption</label>
+      <input type="text" class="input" id="qCaption" value="Scan to leave us a Google review">
+    </div>
+
+    <div class="field">
+      <label for="qFooter">Footer text</label>
+      <input type="text" class="input" id="qFooter" value="We'd love your feedback — it takes 30 seconds">
+      <div class="hint">Small line under the caption. Optional.</div>
     </div>
 
     <div class="field">
@@ -32,20 +38,21 @@
     </div>
 
     <div class="dl-row">
-      <button class="btn btn-primary" id="dlPng">Download PNG</button>
-      <button class="btn btn-glass" id="dlSvg">Download SVG</button>
+      <button class="btn btn-primary" id="dlPng">Download PNG · 1080×1350</button>
+      <button class="btn btn-glass" id="dlSvg">QR only · SVG</button>
     </div>
   </div>
 
-  <div class="preview glass">
-    <div class="preview-label">Print preview</div>
-    <div class="qr-holder" id="qrHolder"></div>
-    <div class="qr-caption" id="qrCaptionText"></div>
+  <div class="preview-area">
+    <div class="preview-label">Live preview — share / print</div>
+    <div class="qr-card" id="qrCard">
+      <div class="card-logo" id="cardLogo"></div>
+      <div class="card-name" id="cardName"></div>
+      <div class="card-qr" id="qrHolder"></div>
+      <div class="card-caption" id="qrCaptionText"></div>
+      <div class="card-footer" id="qrFooterText"></div>
+    </div>
   </div>
 </div>
 
-<script src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
-<script src="js/shared.js"></script>
-<script src="js/qr.js"></script>
-</body>
-</html>
+<script src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script
