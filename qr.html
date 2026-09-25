@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>QuickReview — QR Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/qr.css">
+</head>
+<body>
+
+<div class="wrap">
+  <div class="panel glass">
+    <a class="back-link" href="builder.html">← Back to builder</a>
+    <h1>QR code</h1>
+    <p class="sub">Points customers straight to your review funnel. Error correction is locked to level H so the logo overlay stays scannable.</p>
+
+    <div class="field">
+      <label for="qCaption">Caption under the code</label>
+      <input type="text" class="input" id="qCaption" value="Scan to leave us a review">
+    </div>
+
+    <div class="field">
+      <label for="qLogo">Logo overlay (optional)</label>
+      <input type="file" id="qLogo" accept="image/*" class="input">
+      <div class="hint">Centered in the code. Kept small + level-H correction keeps it scannable.</div>
+    </div>
+
+    <div class="field">
+      <label>Encoded URL</label>
+      <div class="url-box mono" id="qUrl"></div>
+      <div class="hint">This is what the customer's phone opens after scanning.</div>
+    </div>
+
+    <div class="dl-row">
+      <button class="btn btn-primary" id="dlPng">Download PNG</button>
+      <button class="btn btn-glass" id="dlSvg">Download SVG</button>
+    </div>
+  </div>
+
+  <div class="preview glass">
+    <div class="preview-label">Print preview</div>
+    <div class="qr-holder" id="qrHolder"></div>
+    <div class="qr-caption" id="qrCaptionText"></div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+<script src="js/shared.js"></script>
+<script src="js/qr.js"></script>
+</body>
+</html>
