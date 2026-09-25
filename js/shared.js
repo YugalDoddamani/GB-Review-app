@@ -99,6 +99,27 @@ function saveConfig(cfg) {
   try { localStorage.setItem("starling_config", JSON.stringify(cfg)); } catch {}
 }
 
+
+function loadConfig() {
+  const params = new URLSearchParams(location.search);
+  if (params.has("b")) {
+    try { return decodeConfig(params.get("b")); } catch {}
+  }
+  let cfg = defaultConfig();
+  try {
+    const saved = localStorage.getItem("starling_config");
+    if (saved) cfg = { ...defaultConfig(), ...JSON.parse(saved) };
+  } catch {}
+  /* repair old saves that predate the locations field */
+  if (!Array.isArray(cfg.locations) || !cfg.locations.length) {
+    cfg.locations = [{ label: "Main", place_id: cfg.place_id || "" }];
+  }
+  if (!cfg.rating_flows || !Object.keys(cfg.rating_flows).length) {
+    cfg.rating_flows = JSON.parse(JSON.stringify(PRESETS.cafe.flows));
+  }
+  return cfg;
+}
+
 /* ---------- compact encode for QR URLs (short keys keep QRs scannable) ---------- */
 function encodeConfig(cfg) {
   const c = {

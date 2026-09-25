@@ -1,4 +1,20 @@
+/* Guard: is the QR library actually loaded? */
+if (typeof QRCodeStyling === "undefined") {
+  document.querySelector(".sub").textContent =
+    "⚠ QR library failed to load — check that js/qr-code-styling.js exists and refresh.";
+  throw new Error("QRCodeStyling not loaded");
+}
+
 const config = loadConfig();
+
+/* Defensive: old saved configs may lack locations — repair in memory */
+if (!Array.isArray(config.locations) || !config.locations.length) {
+  config.locations = [{ label: "Main", place_id: config.place_id || "" }];
+}
+if (!config.rating_flows || !Object.keys(config.rating_flows).length) {
+  config.rating_flows = JSON.parse(JSON.stringify(PRESETS.cafe.flows));
+}
+
 applyBrand(config.brand_color);
 const logo = getLogo();
 
@@ -11,18 +27,19 @@ const locSel = document.getElementById("qLocation");
 config.locations.forEach((l, i) => {
   const o = document.createElement("option");
   o.value = i;
-  o.textContent = config.locations.length > 1 ? `${config.name} — ${l.label || "Location " + (i + 1)}` : config.name;
+  o.textContent = config.locations.length > 1
+    ? `${config.name} — ${l.label || "Location " + (i + 1)}`
+    : config.name;
   locSel.appendChild(o);
 });
 locSel.addEventListener("change", () => { activeLoc = parseInt(locSel.value, 10); rebuild(); });
 
 function currentURL() { return funnelURL(config, activeLoc); }
 
-/* Logo is now ABOVE the code, so ECC drops from H to Q —
-   lower density, better scannability with the long config URL. */
+/* Logo sits ABOVE the code now, so ECC Q (not H) — less dense, easier to scan */
 function qrOptions() {
   return {
-    width: 600, height: 600,   // rendered large, displayed at 300px = crisp on retina
+    width: 600, height: 600,
     data: currentURL(),
     qrOptions: { errorCorrectionLevel: "Q" },
     dotsOptions: { color: config.brand_color, type: "rounded" },
@@ -33,7 +50,6 @@ function qrOptions() {
   };
 }
 
-/* ---- card preview (DOM) ---- */
 function renderCardHeader() {
   const logoEl = document.getElementById("cardLogo");
   if (logo) {
@@ -62,7 +78,7 @@ function rebuild() {
 captionInput.addEventListener("input", () => document.getElementById("qrCaptionText").textContent = captionInput.value);
 footerInput.addEventListener("input", () => document.getElementById("qrFooterText").textContent = footerInput.value);
 
-/* ---- PNG download: compose the full card on canvas at 1080×1350 ---- */
+/* ---- PNG download: full card composited at 1080×1350 ---- */
 function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
@@ -74,18 +90,16 @@ function roundRect(ctx, x, y, w, h, r) {
 }
 
 document.getElementById("dlPng").onclick = async () => {
-  await document.fonts.ready; // ensure Inter is available to canvas
+  await document.fonts.ready;
 
   const W = 1080, H = 1350;
   const canvas = document.createElement("canvas");
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext("2d");
-
-  // background
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, W, H);
 
-  // logo (rounded square, 150px)
+  /* logo tile */
   const logoSize = 150, logoY = 100;
   if (logo) {
     const bmp = await createImageBitmap(await (await fetch(logo)).blob());
@@ -105,44 +119,37 @@ document.getElementById("dlPng").onclick = async () => {
     ctx.restore();
   }
 
-  // business name
+  /* business name (wrapped) */
   ctx.fillStyle = "#18181b";
   ctx.font = "700 52px Inter, sans-serif";
   ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
-  let nameText = config.name;
-  if (nameText.length > 28) { // wrap long names
-    const words = nameText.split(" ");
-    nameText = "";
-    let line = "", lines = [];
-    words.forEach(w => {
-      if ((line + " " + w).trim().length > 28) { lines.push(line.trim()); line = w; }
+  let nameLines = [config.name];
+  if (config.name.length > 28) {
+    nameLines = [];
+    let line = "";
+    config.name.split(" ").forEach(w => {
+      if ((line + " " + w).trim().length > 28) { nameLines.push(line.trim()); line = w; }
       else line += " " + w;
     });
-    lines.push(line.trim());
-    lines.forEach((l, i) => ctx.fillText(l, W / 2, 320 + i * 60));
-    var nameLines = lines.length;
-  } else {
-    ctx.fillText(nameText, W / 2, 320);
-    var nameLines = 1;
+    nameLines.push(line.trim());
   }
+  nameLines.forEach((l, i) => ctx.fillText(l, W / 2, 320 + i * 60));
 
-  // QR code (720px)
+  /* QR */
   const qrSize = 720;
-  const qrY = 320 + nameLines * 60 + 40;
+  const qrY = 320 + nameLines.length * 60 + 40;
   const blob = await qr.getRawData("png");
   const qrBmp = await createImageBitmap(blob);
   ctx.drawImage(qrBmp, (W - qrSize) / 2, qrY, qrSize, qrSize);
 
-  // caption
-  const caption = captionInput.value.trim();
+  /* caption + footer */
   const captionY = qrY + qrSize + 90;
+  const caption = captionInput.value.trim();
   if (caption) {
     ctx.fillStyle = "#18181b";
     ctx.font = "600 42px Inter, sans-serif";
     ctx.fillText(caption, W / 2, captionY);
   }
-
-  // footer
   const footer = footerInput.value.trim();
   if (footer) {
     ctx.fillStyle = "#a1a1aa";
@@ -160,7 +167,6 @@ document.getElementById("dlPng").onclick = async () => {
   }, "image/png");
 };
 
-/* SVG: QR code only, vector */
 document.getElementById("dlSvg").onclick = async () => {
   const blob = await qr.getRawData("svg");
   const a = document.createElement("a");
