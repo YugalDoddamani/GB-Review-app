@@ -1,20 +1,27 @@
-/* QR generator — ECC level H is ENFORCED, not configurable (logo overlay safety). */
-
 const config = loadConfig();
 applyBrand(config.brand_color);
+const logo = getLogo();
 
-let logoDataUrl = null;
+let activeLoc = 0;
 const captionInput = document.getElementById("qCaption");
-const url = funnelURL(config);
 
-document.getElementById("qUrl").textContent = url;
-document.getElementById("qrCaptionText").textContent = captionInput.value;
+/* location selector */
+const locSel = document.getElementById("qLocation");
+config.locations.forEach((l, i) => {
+  const o = document.createElement("option");
+  o.value = i;
+  o.textContent = config.locations.length > 1 ? `${config.name} — ${l.label || "Location " + (i + 1)}` : config.name;
+  locSel.appendChild(o);
+});
+locSel.addEventListener("change", () => { activeLoc = parseInt(locSel.value, 10); rebuild(); });
+
+function currentURL() { return funnelURL(config, activeLoc); }
 
 function qrOptions() {
   return {
     width: 280, height: 280,
-    data: url,
-    image: logoDataUrl || undefined,
+    data: currentURL(),
+    image: logo || undefined,
     qrOptions: { errorCorrectionLevel: "H" },   // hard rule — logo overlay requires H
     imageOptions: { crossOrigin: "anonymous", margin: 8, imageSize: 0.38 },
     dotsOptions: { color: config.brand_color, type: "rounded" },
@@ -28,6 +35,7 @@ let qr = new QRCodeStyling(qrOptions());
 qr.append(document.getElementById("qrHolder"));
 
 function rebuild() {
+  document.getElementById("qUrl").textContent = currentURL();
   document.getElementById("qrCaptionText").textContent = captionInput.value || "";
   qr = new QRCodeStyling(qrOptions());
   document.getElementById("qrHolder").innerHTML = "";
@@ -38,15 +46,6 @@ captionInput.addEventListener("input", () => {
   document.getElementById("qrCaptionText").textContent = captionInput.value;
 });
 
-document.getElementById("qLogo").addEventListener("change", e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => { logoDataUrl = reader.result; rebuild(); showToast("Logo applied"); };
-  reader.readAsDataURL(file);
-});
-
-/* PNG download — composites QR + caption on a print-ready white canvas */
 document.getElementById("dlPng").onclick = async () => {
   const size = 720;
   const caption = captionInput.value.trim();
@@ -67,20 +66,21 @@ document.getElementById("dlPng").onclick = async () => {
   canvas.toBlob(out => {
     const a = document.createElement("a");
     a.href = URL.createObjectURL(out);
-    a.download = "review-qr.png";
+    const locLabel = (config.locations[activeLoc]?.label || "qr").toLowerCase().replace(/\s+/g, "-");
+    a.download = `starling-qr-${locLabel}.png`;
     a.click();
     showToast("PNG downloaded");
   }, "image/png");
 };
 
-/* SVG download — vector, code only (caption is a print-layout element) */
 document.getElementById("dlSvg").onclick = async () => {
   const blob = await qr.getRawData("svg");
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "review-qr.svg";
+  a.download = "starling-qr.svg";
   a.click();
   showToast("SVG downloaded");
 };
 
+rebuild();
 attachRipple(".btn");

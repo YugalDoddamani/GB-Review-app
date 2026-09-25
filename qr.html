@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>QuickReview — QR Generator</title>
+<title>Starling — QR Generator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/tokens.css">
@@ -13,8 +13,13 @@
 <div class="wrap">
   <div class="panel glass">
     <a class="back-link" href="builder.html">← Back to builder</a>
-    <h1>QR code</h1>
-    <p class="sub">Points customers straight to your review funnel. Error correction is locked to level H so the logo overlay stays scannable.</p>
+    <h1>QR codes</h1>
+    <p class="sub">One code per location. Error correction is locked to level H so the logo overlay stays scannable.</p>
+
+    <div class="field">
+      <label for="qLocation">Location</label>
+      <select class="input" id="qLocation"></select>
+    </div>
 
     <div class="field">
       <label for="qCaption">Caption under the code</label>
@@ -22,15 +27,8 @@
     </div>
 
     <div class="field">
-      <label for="qLogo">Logo overlay (optional)</label>
-      <input type="file" id="qLogo" accept="image/*" class="input">
-      <div class="hint">Centered in the code. Kept small + level-H correction keeps it scannable.</div>
-    </div>
-
-    <div class="field">
       <label>Encoded URL</label>
       <div class="url-box mono" id="qUrl"></div>
-      <div class="hint">This is what the customer's phone opens after scanning.</div>
     </div>
 
     <div class="dl-row">

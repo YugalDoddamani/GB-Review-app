@@ -45,3 +45,10 @@ body { display: flex; justify-content: center; padding: 40px 16px 56px; min-heig
   font-family: var(--font-mono); font-size: 11px;
   color: var(--content-muted); text-align: center; margin-top: 16px; opacity: 0.6;
 }
+
+.business-logo img, .business-logo-img {
+  width: 56px; height: 56px; border-radius: 14px; object-fit: cover;
+  margin: 0 auto 12px; display: block;
+  border: 1px solid var(--line-default);
+  animation: fade-slide 0.5s var(--ease-out) both;
+}

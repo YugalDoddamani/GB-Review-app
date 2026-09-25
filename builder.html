@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>QuickReview — Builder</title>
+<title>Starling — Builder</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/tokens.css">
@@ -10,24 +10,20 @@
 </head>
 <body>
 
-<div class="topbar glass-flat">
-  <div class="logo-mark">Q</div>
-  <div class="app-name">QuickReview Builder</div>
+<div class="topbar">
+  <div class="logo-mark">S</div>
+  <div class="app-name">Starling Builder</div>
   <div class="save-state" id="saveState"><span class="dot"></span>Saved locally</div>
   <a class="btn btn-glass topbar-btn" href="qr.html">QR generator</a>
 </div>
 
 <div class="split">
   <div class="panel glass">
+
     <h2>Business profile</h2>
     <div class="field">
       <label for="fName">Business name</label>
       <input type="text" class="input" id="fName">
-    </div>
-    <div class="field">
-      <label for="fInitial">Logo initial</label>
-      <input type="text" class="input" id="fInitial" maxlength="2" style="width:80px">
-      <div class="hint">Logo image upload arrives in the branding phase.</div>
     </div>
     <div class="field">
       <label for="fColor">Brand color</label>
@@ -35,28 +31,42 @@
         <input type="color" id="fColor" class="color-picker">
         <span class="hex mono" id="fColorHex"></span>
       </div>
-      <div class="hint">Drives stars, chips, buttons, and the ambient gradient on the customer page.</div>
+    </div>
+    <div class="field">
+      <label for="fService">Service type</label>
+      <div class="row-pair">
+        <select class="input" id="fService"></select>
+        <button class="btn btn-glass" id="applyPreset">Load preset</button>
+      </div>
+      <div class="hint">Loads starter headings + tags for this industry. Loading overwrites your current rating flows.</div>
+    </div>
+    <div class="field">
+      <label for="fLogo">Logo</label>
+      <div class="logo-row">
+        <div class="logo-preview" id="logoPreview">?</div>
+        <div class="logo-actions">
+          <input type="file" id="fLogo" accept="image/*" class="input">
+          <button class="btn btn-ghost" id="logoRemove">Remove logo</button>
+        </div>
+      </div>
+      <div class="hint">Shown on your devices and in the QR overlay. Scanned phones fall back to the initial until we host the image.</div>
     </div>
 
-    <h2>Google review destination</h2>
-    <div class="field">
-      <label for="fPlaceId">Place ID</label>
-      <input type="text" class="input mono" id="fPlaceId">
-      <div class="warn" id="placeWarn" style="display:none">This doesn't look like a Place ID — most start with "ChIJ".</div>
-      <div class="hint">Find yours with Google's <a href="https://developers.google.com/maps/documentation/places/web-service/place-id" target="_blank">Place ID finder</a>.</div>
-      <button class="btn btn-glass" id="testLinkBtn" style="margin-top:10px">Test this link</button>
-    </div>
+    <h2>Locations</h2>
+    <div id="locList"></div>
+    <button class="btn btn-glass" id="locAdd">+ Add location</button>
+    <div class="hint">Each location gets its own Place ID and its own QR code.</div>
 
-    <h2>Review tags</h2>
+    <h2>Rating flows</h2>
+    <div class="rtabs" id="rtabs"></div>
     <div class="field">
-      <label for="fPosTags">Positive tags</label>
-      <textarea class="input" id="fPosTags"></textarea>
-      <div class="hint">One per line. Shown to customers rating 4–5 stars.</div>
+      <label for="fHeading">Heading for <span id="ratingNum">5</span>-star customers</label>
+      <input type="text" class="input" id="fHeading">
     </div>
     <div class="field">
-      <label for="fImpTags">Improvement tags</label>
-      <textarea class="input" id="fImpTags"></textarea>
-      <div class="hint">One per line. Shown to customers rating 1–3 stars.</div>
+      <label for="fTags">Tags</label>
+      <textarea class="input" id="fTags"></textarea>
+      <div class="hint">One per line. Shown only to customers who pick this rating.</div>
     </div>
 
     <h2>Danger zone</h2>

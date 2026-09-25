@@ -1,20 +1,35 @@
 let BUSINESS = loadConfig();
+const locIndex = parseInt(new URLSearchParams(location.search).get("l") || "0", 10);
+const LOCATION = BUSINESS.locations[locIndex] || BUSINESS.locations[0];
+const PLACE_ID = LOCATION.place_id;
+const MULTI = BUSINESS.locations.length > 1;
+
 let rating = 0, selectedTags = [];
 
 function applyConfig() {
-  document.getElementById("bizName").textContent = BUSINESS.name;
-  const logo = document.getElementById("logo");
-  logo.textContent = BUSINESS.logo_initial;
+  document.getElementById("bizName").textContent =
+    BUSINESS.name + (MULTI && LOCATION.label ? " — " + LOCATION.label : "");
   applyBrand(BUSINESS.brand_color);
-  document.getElementById("placeNote").textContent = "placeid: " + BUSINESS.place_id;
+
+  /* logo: uploaded image if this device has it, otherwise the initial */
+  const logoEl = document.getElementById("logo");
+  const img = document.getElementById("logoImg");
+  const logo = getLogo();
+  if (logo) {
+    img.src = logo; img.style.display = "block";
+    logoEl.style.display = "none";
+  } else {
+    logoEl.textContent = BUSINESS.logo_initial || (BUSINESS.name[0] || "Y").toUpperCase();
+    logoEl.style.display = "flex"; img.style.display = "none";
+  }
+
   document.title = "Leave a review — " + BUSINESS.name;
   resetFunnel();
 }
 
-/* builder hot-reload */
 window.addEventListener("message", e => {
-  if (e.data && e.data.type === "qr_config") {
-    BUSINESS = { ...DEFAULT_CONFIG, ...e.data.config };
+  if (e.data && e.data.type === "starling_config") {
+    BUSINESS = { ...defaultConfig(), ...e.data.config };
     applyConfig();
   }
 });
@@ -35,22 +50,20 @@ function selectRating(n) {
     s.classList.toggle("filled", i < n);
     if (i === n - 1) { s.classList.remove("pop"); void s.offsetWidth; s.classList.add("pop"); }
   });
-  // analytics later → review_events insert. Never changes the destination.
-  console.log("[review_event] rating:", n);
+  console.log("[review_event] rating:", n, "location:", LOCATION.label); // analytics later
   setTimeout(() => gotoStep(2), 300);
 }
 
-/* tags */
+/* tags — per-rating flow */
 function renderTags() {
-  const positive = rating >= 4;
-  const tags = positive ? BUSINESS.positive_tags : BUSINESS.improvement_tags;
-  document.getElementById("tagsTitle").textContent = positive ? "What stood out?" : "What could be better?";
-  document.getElementById("tagsHint").textContent = positive
-    ? "Pick anything that applies — or skip."
-    : "Your honest feedback helps us improve — pick anything that applies, or skip.";
+  const flow = BUSINESS.rating_flows[rating] || { heading: "What stood out?", tags: [] };
+  document.getElementById("tagsTitle").textContent = flow.heading || "What stood out?";
+  document.getElementById("tagsHint").textContent =
+    rating >= 4 ? "Pick anything that applies — or skip."
+                : "Your honest feedback helps us improve — pick anything that applies, or skip.";
   const chipsEl = document.getElementById("chips");
   chipsEl.innerHTML = ""; selectedTags = [];
-  tags.forEach(t => {
+  (flow.tags || []).forEach(t => {
     const c = document.createElement("button");
     c.className = "chip"; c.textContent = t;
     c.onclick = () => {
@@ -65,23 +78,9 @@ function renderTags() {
 document.getElementById("tagsNext").onclick = () => { generateReview(); gotoStep(3); };
 document.getElementById("tagsSkip").onclick = () => { generateReview(); gotoStep(3); };
 
-/* review generation + handoff */
 function generateReview() {
-  const name = BUSINESS.name;
-  const openers = {
-    5: `I had an excellent experience at ${name} and would happily recommend it.`,
-    4: `I had a really good experience at ${name} and would recommend it.`,
-    3: `My visit to ${name} was solid overall, with some real highlights.`,
-    2: `My experience at ${name} fell short of expectations in a couple of ways.`,
-    1: `I was disappointed with my experience at ${name}.`
-  };
-  let text = openers[rating] || openers[3];
-  if (selectedTags.length) {
-    const list = selectedTags.map(t => t.toLowerCase()).join(", ");
-    text += rating >= 4 ? ` The ${list} really stood out.` : ` Specifically, the ${list} could use some attention.`;
-  }
-  text += rating >= 4 ? " I'll definitely be back." : " I hope to see these improve on my next visit.";
-  document.getElementById("reviewText").value = text;
+  // variation engine — different structure every time
+  document.getElementById("reviewText").value = buildReview(rating, selectedTags, BUSINESS.name);
 }
 
 document.getElementById("copyBtn").onclick = async () => {
@@ -93,11 +92,10 @@ document.getElementById("copyBtn").onclick = async () => {
 
 document.getElementById("googleBtn").onclick = () => {
   // Compliance: EVERY rating goes to Google. No branches, no exceptions.
-  window.open("https://search.google.com/local/writereview?placeid=" + BUSINESS.place_id, "_blank");
+  window.open("https://search.google.com/local/writereview?placeid=" + PLACE_ID, "_blank");
   console.log("[review_event] handoff, rating:", rating, "tags:", selectedTags);
 };
 
-/* navigation */
 const stepLabels = ["Step 1 of 3 · How was your visit?", "Step 2 of 3 · A few details", "Step 3 of 3 · Your review"];
 function gotoStep(n) {
   document.querySelectorAll(".step").forEach(s => s.classList.remove("active"));

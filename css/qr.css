@@ -39,3 +39,5 @@ body { display: flex; justify-content: center; padding: 40px 20px; min-height: 1
   .wrap { flex-direction: column; }
   .preview { width: auto; }
 }
+
+.field select.input { cursor: pointer; }
