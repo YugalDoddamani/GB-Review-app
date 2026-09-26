@@ -1,50 +1,146 @@
-body { display: flex; justify-content: center; padding: 32px 16px 56px; min-height: 100vh; }
-.page { width: 100%; max-width: 430px; }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#18181b" />
+  <title>Leave a review</title>
 
-.business-header { text-align: center; margin-bottom: 24px; }
-.business-logo {
-  width: 58px; height: 58px; border-radius: 16px; margin: 0 auto 12px;
-  background: var(--brand-soft); color: var(--brand);
-  font-weight: 600; font-size: 22px;
-  display: flex; align-items: center; justify-content: center;
-  border: 1px solid var(--glass-border);
-  box-shadow: inset 0 1px 0 var(--glass-highlight);
-  animation: fade-slide 0.5s var(--ease-out) both;
-}
-.business-name { font-size: 18px; font-weight: 600; animation: fade-slide 0.5s 0.05s var(--ease-out) both; }
-.step-label {
-  font-size: 11.5px; color: var(--content-muted);
-  text-transform: uppercase; letter-spacing: 0.08em; margin-top: 5px;
-  animation: fade-slide 0.5s 0.1s var(--ease-out) both;
-}
+  <!-- Adjust these paths to match your folder structure -->
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/funnel.css" />
 
-.card { padding: 28px 24px; animation: fade-slide 0.5s 0.15s var(--ease-out) both; }
+  <!-- Progress bar (inline so it works even if funnel.css isn't updated yet) -->
+  <style>
+    .progress-track {
+      width: 100%;
+      max-width: 180px;
+      height: 4px;
+      background: rgba(0, 0, 0, 0.08);
+      border-radius: 999px;
+      margin: 14px auto 0;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--brand, #18181b);
+      border-radius: 999px;
+      transition: width 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+                  background 0.3s ease;
+    }
+    .progress-fill.done { background: #16a34a; }
 
-.step { display: none; }
-.step.active { display: block; animation: fade-slide 0.35s var(--ease-out) both; }
-.step-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
-.step-hint { font-size: 13.5px; color: var(--content-secondary); margin-bottom: 20px; line-height: 1.5; }
+    /* CTA button with left-to-right fill */
+    .cta-btn {
+      position: relative;
+      overflow: hidden;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 16px 24px;
+      border: none;
+      border-radius: 12px;
+      background: var(--brand, #18181b);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      isolation: isolate;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 0.15s ease;
+    }
+    .cta-btn:active { transform: scale(0.98); }
+    .cta-btn::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: #16a34a;
+      transform: scaleX(0);
+      transform-origin: left center;
+      transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 0;
+    }
+    .cta-btn.filling::before { transform: scaleX(1); }
+    .cta-label { position: relative; z-index: 1; }
 
-/* stars — hover grow, select pop */
-.stars { display: flex; justify-content: center; gap: 10px; margin: 10px 0 26px; }
-.star {
-  font-size: 42px; line-height: 1; cursor: pointer;
-  color: rgba(255, 255, 255, 0.14);
-  background: none; border: none; padding: 4px;
-  transition: color 0.15s, transform 0.25s var(--ease-spring), filter 0.2s;
-}
-.star:hover { transform: scale(1.18); color: var(--brand); filter: drop-shadow(0 0 10px var(--brand-soft)); }
-.star.filled { color: var(--brand); filter: drop-shadow(0 2px 12px var(--brand-soft)); }
-.star.pop { animation: pop 0.35s var(--ease-spring); }
+    /* Fallback toast if base.css doesn't have it */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #18181b;
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-size: 13px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s, transform 0.3s;
+      z-index: 100;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="business-header">
+      <div class="business-logo" id="logo">Y</div>
+      <img class="business-logo-img" id="logoImg" alt="" style="display:none" />
+      <div class="business-name" id="bizName">Your Business</div>
+      <div class="step-label" id="stepLabel">Step 1 of 3 · How was your visit?</div>
 
-.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+      <!-- Progress bar replaces the old stepper dots -->
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+    </header>
 
-.step-actions { margin-top: 24px; display: flex; flex-direction: column; gap: 10px; }
-.step-actions .btn { width: 100%; }
-.review-textarea { min-height: 150px; }
+    <main class="card">
+      <!-- STEP 1 — Stars -->
+      <section class="step active" id="step1">
+        <h2 class="step-title">How was your experience?</h2>
+        <p class="step-hint">Tap a star — your honest feedback helps us improve.</p>
+        <div class="stars" id="stars" role="radiogroup" aria-label="Star rating"></div>
+      </section>
 
-.footer-note { text-align: center; font-size: 12px; color: var(--content-muted); margin-top: 18px; line-height: 1.5; }
-.place-note {
-  font-family: var(--font-mono); font-size: 11px;
-  color: var(--content-muted); text-align: center; margin-top: 16px; opacity: 0.6;
-}
+      <!-- STEP 2 — Tags -->
+      <section class="step" id="step2">
+        <h2 class="step-title" id="tagsTitle">What stood out?</h2>
+        <p class="step-hint" id="tagsHint"></p>
+        <div class="chips" id="chips"></div>
+        <div class="step-actions">
+          <button type="button" class="btn" id="tagsNext">Continue</button>
+          <button type="button" class="btn btn-ghost" id="tagsSkip">Skip</button>
+        </div>
+      </section>
+
+      <!-- STEP 3 — Review + Google handoff -->
+      <section class="step" id="step3">
+        <h2 class="step-title">Your review</h2>
+        <p class="step-hint">We've drafted a starting point — edit it freely, then continue to Google.</p>
+        <textarea id="reviewText" class="review-textarea" rows="6"></textarea>
+        <div class="step-actions">
+          <button type="button" id="googleBtn" class="cta-btn">
+            <span class="cta-label">Copy &amp; Continue to Google</span>
+          </button>
+        </div>
+        <p class="footer-note">Your review is posted on Google — we never filter or edit what you write.</p>
+      </section>
+    </main>
+
+    <p class="place-note" id="placeNote"></p>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- ORDER MATTERS: shared.js must load before funnel.js -->
+  <script src="js/shared.js"></script>
+  <script src="js/funnel.js"></script>
+</body>
+</html>

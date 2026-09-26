@@ -143,7 +143,7 @@ function generateReview() {
       rating,
       selectedTags,
       BUSINESS.name,
-      BUSINESS.city || ""
+      BUSINESS.city || ""     // ← must be here
     );
   } else {
     textEl.value = "Great experience at " + BUSINESS.name + "!";
@@ -229,31 +229,28 @@ function generateReview() {
     "Step 3 of 3 · Your review"
   ];
 
-  function gotoStep(n) {
-    document.querySelectorAll(".step").forEach((s) => s.classList.remove("active"));
-    const target = document.getElementById("step" + n);
-    if (target) target.classList.add("active");
+ function gotoStep(n) {
+  document.querySelectorAll(".step").forEach((s) => s.classList.remove("active"));
+  const target = document.getElementById("step" + n);
+  if (target) target.classList.add("active");
 
-    const lbl = document.getElementById("stepLabel");
-    if (lbl) lbl.textContent = stepLabels[n - 1];
+  const lbl = document.getElementById("stepLabel");
+  if (lbl) lbl.textContent = stepLabels[n - 1];
 
-    document.querySelectorAll(".step-dot").forEach((dot) => {
-      const step = parseInt(dot.dataset.step, 10);
-      dot.classList.toggle("active", step === n);
-      dot.classList.toggle("completed", step < n);
-    });
-
-    if (n === 2) renderTags();
+  // Progress bar: 33% → 66% → 100%
+  const fill = document.getElementById("progressFill");
+  if (fill) {
+    fill.style.width = (n / 3) * 100 + "%";
+    fill.classList.toggle("done", n === 3);
   }
 
-  function resetFunnel() {
-    rating = 0;
-    selectedTags = [];
-    if (starsEl) {
-      [...starsEl.children].forEach((s) => s.classList.remove("filled"));
-    }
-    gotoStep(1);
-  }
+  if (n === 2) renderTags();
+}
+const fill = document.getElementById("progressFill");
+if (fill) {
+  fill.style.width = "0%";
+  fill.classList.remove("done");
+}
 
   /* ---------- Boot ---------- */
   applyConfig();

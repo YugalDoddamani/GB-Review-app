@@ -95,42 +95,26 @@ body { display: flex; justify-content: center; padding: 40px 16px 56px; min-heig
   gap: 8px;
 }
 
-/* ---- Stepper checkmarks ---- */
-.stepper {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 12px;
+
+.progress-track {
+  width: 100%;
+  max-width: 180px;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 999px;
+  margin: 14px auto 0;
+  overflow: hidden;
 }
-.step-dot {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.35);
-  display: grid;
-  place-items: center;
-  font-size: 12px;
-  font-weight: 700;
-  transition: background 0.3s, color 0.3s, box-shadow 0.3s, transform 0.3s;
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--brand, #18181b);
+  border-radius: 999px;
+  transition: width 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+              background 0.3s ease;
 }
-.step-dot.active {
-  background: var(--brand-soft);
-  color: var(--brand);
-  box-shadow: 0 0 0 2px var(--brand);
-  transform: scale(1.1);
-}
-.step-dot.completed {
+
+.progress-fill.done {
   background: #16a34a;
-  color: transparent;
-  position: relative;
-}
-.step-dot.completed::after {
-  content: "✓";
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  color: #fff;
-  font-size: 13px;
 }

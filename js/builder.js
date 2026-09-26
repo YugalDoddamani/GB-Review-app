@@ -176,3 +176,12 @@ function fillForm() {
 fillForm();
 applyBrand(config.brand_color);
 attachRipple(".btn");
+
+
+const cityEl = document.getElementById("fCity");
+if (cityEl) {
+  cityEl.addEventListener("input", scheduleSave);
+  console.log("[builder] city listener attached");
+} else {
+  console.error("[builder] #fCity not found in DOM!");
+}
