@@ -3,15 +3,16 @@
    ============================================================ */
 
 function startFunnel() {
+
   /* ---------- Config ---------- */
   let BUSINESS = (typeof loadConfig === "function") ? loadConfig() : null;
 
-  // Fallback so the funnel never hard-crashes on missing config
   if (!BUSINESS || !BUSINESS.locations || !BUSINESS.locations.length) {
     BUSINESS = {
       name: "Your Business",
       brand_color: "#18181b",
       logo_initial: "Y",
+      city: "",
       rating_flows: {},
       locations: [{ label: "Main", place_id: "" }]
     };
@@ -25,7 +26,9 @@ function startFunnel() {
   let rating = 0;
   let selectedTags = [];
 
-  /* ---------- Apply config to DOM ---------- */
+  const starsEl = document.getElementById("stars");
+
+  /* ---------- All function declarations (hoisted) ---------- */
   function applyConfig() {
     const nameEl = document.getElementById("bizName");
     if (nameEl) {
@@ -52,33 +55,13 @@ function startFunnel() {
     }
 
     document.title = "Leave a review — " + BUSINESS.name;
+
+    const placeNote = document.getElementById("placeNote");
+    if (placeNote && PLACE_ID) {
+      placeNote.textContent = "Place ID: " + PLACE_ID;
+    }
+
     resetFunnel();
-  }
-
-  /* ---------- Config from parent (builder iframe) ---------- */
-  window.addEventListener("message", (e) => {
-    if (e.data && e.data.type === "starling_config") {
-      const base = (typeof defaultConfig === "function") ? defaultConfig() : {};
-      BUSINESS = { ...base, ...e.data.config };
-      applyConfig();
-    }
-  });
-
-  /* ---------- Stars ---------- */
-  const starsEl = document.getElementById("stars");
-  if (starsEl) {
-    starsEl.innerHTML = "";
-    for (let i = 1; i <= 5; i++) {
-      const b = document.createElement("button");
-      b.type = "button";
-      b.className = "star";
-      b.textContent = "★";
-      b.setAttribute("aria-label", i + " stars");
-      b.onclick = () => selectRating(i);
-      starsEl.appendChild(b);
-    }
-  } else {
-    console.error("[funnel] #stars element not found in funnel.html");
   }
 
   function selectRating(n) {
@@ -97,7 +80,6 @@ function startFunnel() {
     setTimeout(() => gotoStep(2), 300);
   }
 
-  /* ---------- Tags / Step 2 ---------- */
   function renderTags() {
     const flow = (BUSINESS.rating_flows && BUSINESS.rating_flows[rating]) || {
       heading: "What stood out?",
@@ -134,28 +116,21 @@ function startFunnel() {
     });
   }
 
-  /* ---------- Step 3: build review + copy ---------- */
-function generateReview() {
-  const textEl = document.getElementById("reviewText");
-  if (!textEl) return;
-  if (typeof buildReview === "function") {
-    textEl.value = buildReview(
-      rating,
-      selectedTags,
-      BUSINESS.name,
-      BUSINESS.city || ""     // ← must be here
-    );
-  } else {
-    textEl.value = "Great experience at " + BUSINESS.name + "!";
+  function generateReview() {
+    const textEl = document.getElementById("reviewText");
+    if (!textEl) return;
+    if (typeof buildReview === "function") {
+      textEl.value = buildReview(
+        rating,
+        selectedTags,
+        BUSINESS.name,
+        BUSINESS.city || ""
+      );
+    } else {
+      textEl.value = "Great experience at " + BUSINESS.name + "!";
+    }
   }
-}
 
-  const tagsNext = document.getElementById("tagsNext");
-  const tagsSkip = document.getElementById("tagsSkip");
-  if (tagsNext) tagsNext.onclick = () => { generateReview(); gotoStep(3); };
-  if (tagsSkip) tagsSkip.onclick = () => { generateReview(); gotoStep(3); };
-
-  /* ---------- iOS-safe clipboard ---------- */
   function copyToClipboard(text) {
     if (navigator.clipboard && window.isSecureContext) {
       navigator.clipboard.writeText(text).catch(() => {});
@@ -166,21 +141,78 @@ function generateReview() {
     ta.setAttribute("readonly", "");
     ta.style.cssText = "position:fixed;top:0;left:0;opacity:0;font-size:16px;";
     document.body.appendChild(ta);
-
     const range = document.createRange();
     range.selectNodeContents(ta);
     const sel = window.getSelection();
     sel.removeAllRanges();
     sel.addRange(range);
     ta.setSelectionRange(0, 999999);
-
     let ok = false;
     try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
     document.body.removeChild(ta);
     return ok;
   }
 
-  /* ---------- Single "Copy & Continue to Google" button ---------- */
+  function gotoStep(n) {
+    document.querySelectorAll(".step").forEach((s) => s.classList.remove("active"));
+    const target = document.getElementById("step" + n);
+    if (target) target.classList.add("active");
+
+    const lbl = document.getElementById("stepLabel");
+    if (lbl) lbl.textContent = stepLabels[n - 1];
+
+    const fill = document.getElementById("progressFill");
+    if (fill) {
+      fill.style.width = (n / 3) * 100 + "%";
+      fill.classList.toggle("done", n === 3);
+    }
+
+    if (n === 2) renderTags();
+  }
+
+  function resetFunnel() {
+    rating = 0;
+    selectedTags = [];
+    if (starsEl) {
+      [...starsEl.children].forEach((s) => s.classList.remove("filled"));
+    }
+    const fill = document.getElementById("progressFill");
+    if (fill) {
+      fill.style.width = "0%";
+      fill.classList.remove("done");
+    }
+    gotoStep(1);
+  }
+
+  /* ---------- Build stars ---------- */
+  if (starsEl) {
+    starsEl.innerHTML = "";
+    for (let i = 1; i <= 5; i++) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "star";
+      b.textContent = "★";
+      b.setAttribute("aria-label", i + " stars");
+      b.onclick = () => selectRating(i);
+      starsEl.appendChild(b);
+    }
+  } else {
+    console.error("[funnel] #stars element not found in funnel.html");
+  }
+
+  /* ---------- Step labels ---------- */
+  const stepLabels = [
+    "Step 1 of 3 · How was your visit?",
+    "Step 2 of 3 · A few details",
+    "Step 3 of 3 · Your review"
+  ];
+
+  /* ---------- Wire up buttons ---------- */
+  const tagsNext = document.getElementById("tagsNext");
+  const tagsSkip = document.getElementById("tagsSkip");
+  if (tagsNext) tagsNext.onclick = () => { generateReview(); gotoStep(3); };
+  if (tagsSkip) tagsSkip.onclick = () => { generateReview(); gotoStep(3); };
+
   (function initGoogleButton() {
     const btn = document.getElementById("googleBtn");
     if (!btn) return;
@@ -197,7 +229,6 @@ function generateReview() {
       const text = textEl ? textEl.value : "";
       const url  = "https://search.google.com/local/writereview?placeid=" + PLACE_ID;
 
-      // Synchronous copy — must happen inside the gesture
       const ok = copyToClipboard(text);
 
       btn.classList.add("filling");
@@ -222,41 +253,19 @@ function generateReview() {
     });
   })();
 
-  /* ---------- Step navigation ---------- */
-  const stepLabels = [
-    "Step 1 of 3 · How was your visit?",
-    "Step 2 of 3 · A few details",
-    "Step 3 of 3 · Your review"
-  ];
-
- function gotoStep(n) {
-  document.querySelectorAll(".step").forEach((s) => s.classList.remove("active"));
-  const target = document.getElementById("step" + n);
-  if (target) target.classList.add("active");
-
-  const lbl = document.getElementById("stepLabel");
-  if (lbl) lbl.textContent = stepLabels[n - 1];
-
-  // Progress bar: 33% → 66% → 100%
-  const fill = document.getElementById("progressFill");
-  if (fill) {
-    fill.style.width = (n / 3) * 100 + "%";
-    fill.classList.toggle("done", n === 3);
-  }
-
-  if (n === 2) renderTags();
-}
-const fill = document.getElementById("progressFill");
-if (fill) {
-  fill.style.width = "0%";
-  fill.classList.remove("done");
-}
+  /* ---------- Listen for parent (builder) config ---------- */
+  window.addEventListener("message", (e) => {
+    if (e.data && e.data.type === "starling_config") {
+      const base = (typeof defaultConfig === "function") ? defaultConfig() : {};
+      BUSINESS = { ...base, ...e.data.config };
+      applyConfig();
+    }
+  });
 
   /* ---------- Boot ---------- */
   applyConfig();
   if (typeof attachRipple === "function") attachRipple(".btn");
 
-  // Notify parent (builder) that we're ready for config
   try {
     if (window.parent && window.parent !== window) {
       window.parent.postMessage({ type: "starling_ready" }, "*");
