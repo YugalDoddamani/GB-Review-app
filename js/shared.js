@@ -78,9 +78,15 @@ const PRESETS = {
 
 /* ---------- config load/save ---------- */
 function defaultConfig() {
-  const cfg = { ...DEFAULT_CONFIG, locations: DEFAULT_CONFIG.locations.map(l => ({ ...l })) };
-  cfg.rating_flows = JSON.parse(JSON.stringify(PRESETS.cafe.flows));
-  return cfg;
+  return {
+    name: "Your Business",
+    logo_initial: "Y",
+    brand_color: "#18181b",
+    service_type: "cafe",
+    city: "",                 // ← NEW
+    rating_flows: { /* ... existing ... */ },
+    locations: [{ label: "Main", place_id: "" }]
+  };
 }
 
 function loadConfig() {
@@ -187,15 +193,45 @@ const CLOSERS = {
 };
 const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 
-function buildReview(rating, tags, name) {
-  const band = rating >= 4 ? "high" : rating === 3 ? "mid" : "low";
-  let text = pick(OPENERS[rating]).replace("{name}", name);
-  if (tags.length) {
-    const list = tags.map(t => t.toLowerCase()).join(", ");
-    text += " " + pick(TAG_PATTERNS[band]).replace("{list}", list);
+function buildReview(rating, tags, businessName, city) {
+  const tagList = (tags || []).slice(0, 3);
+  const tagPhrase =
+    tagList.length === 0 ? "" :
+    tagList.length === 1 ? tagList[0] :
+    tagList.length === 2 ? `${tagList[0]} and ${tagList[1]}` :
+                           `${tagList[0]}, ${tagList[1]}, and ${tagList[2]}`;
+
+  const cityPhrase = city ? ` in ${city}` : "";
+
+  if (rating >= 5) {
+    const openers = [
+      `Hands down the best experience I've had${cityPhrase}.`,
+      `If you're looking for quality${cityPhrase}, this is it.`,
+      `Easily one of the best spots${cityPhrase}.`,
+      `A hidden gem${cityPhrase} — absolutely worth it.`
+    ];
+    const opener = openers[Math.floor(Math.random() * openers.length)];
+    const body = tagPhrase
+      ? `The ${tagPhrase} really stood out.`
+      : `Everything from start to finish was on point.`;
+    return `${opener} ${body} ${businessName} has earned a loyal customer.`;
   }
-  text += " " + pick(CLOSERS[band]);
-  return text;
+
+  if (rating === 4) {
+    const opener = `Really enjoyed my visit${cityPhrase}.`;
+    const body = tagPhrase ? `The ${tagPhrase} were great.` : `Solid all around.`;
+    return `${opener} ${body} Would come back to ${businessName}.`;
+  }
+
+  if (rating === 3) {
+    return tagPhrase
+      ? `Decent visit${cityPhrase}. The ${tagPhrase} could be better.`
+      : `Decent visit. A few things could be improved at ${businessName}.`;
+  }
+
+  return tagPhrase
+    ? `Unfortunately the ${tagPhrase} weren't up to expectations.`
+    : `My visit to ${businessName} didn't meet expectations.`;
 }
 
 /* ---------- micro-interactions ---------- */

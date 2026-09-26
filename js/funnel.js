@@ -135,15 +135,20 @@ function startFunnel() {
   }
 
   /* ---------- Step 3: build review + copy ---------- */
-  function generateReview() {
-    const textEl = document.getElementById("reviewText");
-    if (!textEl) return;
-    if (typeof buildReview === "function") {
-      textEl.value = buildReview(rating, selectedTags, BUSINESS.name);
-    } else {
-      textEl.value = "Great experience at " + BUSINESS.name + "!";
-    }
+function generateReview() {
+  const textEl = document.getElementById("reviewText");
+  if (!textEl) return;
+  if (typeof buildReview === "function") {
+    textEl.value = buildReview(
+      rating,
+      selectedTags,
+      BUSINESS.name,
+      BUSINESS.city || ""
+    );
+  } else {
+    textEl.value = "Great experience at " + BUSINESS.name + "!";
   }
+}
 
   const tagsNext = document.getElementById("tagsNext");
   const tagsSkip = document.getElementById("tagsSkip");

@@ -9,8 +9,12 @@ let activeRating = 5;
 /* ---- element refs ---- */
 const el = id => document.getElementById(id);
 const fields = {
-  name: el("fName"), color: el("fColor"), service: el("fService"),
-  heading: el("fHeading"), tags: el("fTags")
+  name: el("fName"),
+  color: el("fColor"),
+  service: el("fService"),
+  heading: el("fHeading"),
+  tags: el("fTags"),
+  city: el("fCity")            // ← NEW
 };
 
 /* ---- service select ---- */
@@ -132,6 +136,7 @@ function pushConfig() {
   config.name = fields.name.value.trim() || "Your Business";
   config.logo_initial = (config.name[0] || "Y").toUpperCase();
   config.brand_color = fields.color.value;
+  config.city = (fields.city?.value || "").trim();   // ← NEW
   saveConfig(config);
   applyBrand(config.brand_color);
   el("fColorHex").textContent = config.brand_color;
@@ -145,6 +150,7 @@ function pushConfig() {
 fields.name.addEventListener("input", scheduleSave);
 fields.color.addEventListener("input", scheduleSave);
 fields.service.addEventListener("change", scheduleSave);
+if (fields.city) fields.city.addEventListener("input", scheduleSave);   // ← NEW
 
 el("resetBtn").onclick = () => {
   config = defaultConfig();
@@ -159,6 +165,7 @@ function fillForm() {
   fields.name.value = config.name;
   fields.color.value = config.brand_color;
   fields.service.value = config.service_type;
+  if (fields.city) fields.city.value = config.city || "";   // ← NEW
   el("fColorHex").textContent = config.brand_color;
   renderLocations();
   renderRatingTabs();
