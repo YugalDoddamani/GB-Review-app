@@ -17,6 +17,12 @@
     <img class="business-logo-img" id="logoImg" alt="" style="display:none">
     <div class="business-name" id="bizName"></div>
     <div class="step-label" id="stepLabel">Step 1 of 3 · How was your visit?</div>
+  
+    <div class="stepper">
+  <div class="step-dot active" data-step="1">1</div>
+  <div class="step-dot" data-step="2">2</div>
+  <div class="step-dot" data-step="3">3</div>
+</div>
   </div>
 
   <div class="card glass">
@@ -39,9 +45,10 @@
       <div class="step-hint">We've drafted a starting point — edit it freely, then continue to Google.</div>
       <textarea class="input review-textarea" id="reviewText"></textarea>
       <div class="step-actions">
-        <button class="btn btn-glass" id="copyBtn">Copy to clipboard</button>
-        <button class="btn btn-primary" id="googleBtn">Continue to Google</button>
-      </div>
+  <button id="googleBtn" class="cta-btn" type="button">
+    <span class="cta-label">Copy &amp; Continue to Google</span>
+  </button>
+</div>
       <div class="footer-note">Your review is posted on Google — we never filter or edit what you write.</div>
     </div>
   </div>

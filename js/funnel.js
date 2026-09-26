@@ -82,28 +82,95 @@ function generateReview() {
   // variation engine — different structure every time
   document.getElementById("reviewText").value = buildReview(rating, selectedTags, BUSINESS.name);
 }
+/* ---------- iOS-safe clipboard ---------- */
+function copyToClipboard(text) {
+  // Modern API — works on HTTPS + iOS Safari 13.4+
+  if (navigator.clipboard && window.isSecureContext) {
+    // Fire-and-forget; the copy is queued before we navigate.
+    navigator.clipboard.writeText(text).catch(() => {});
+    return true;
+  }
 
-document.getElementById("copyBtn").onclick = async () => {
-  const text = document.getElementById("reviewText").value;
-  try { await navigator.clipboard.writeText(text); }
-  catch { const ta = document.getElementById("reviewText"); ta.select(); document.execCommand("copy"); }
-  showToast("Copied — paste it into Google");
-};
+  // Legacy fallback (older iOS, non-HTTPS, some in-app browsers)
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.setAttribute("readonly", "");
+  ta.style.cssText = "position:fixed;top:0;left:0;opacity:0;font-size:16px;";
+  document.body.appendChild(ta);
 
-document.getElementById("googleBtn").onclick = () => {
-  // Compliance: EVERY rating goes to Google. No branches, no exceptions.
-  window.open("https://search.google.com/local/writereview?placeid=" + PLACE_ID, "_blank");
-  console.log("[review_event] handoff, rating:", rating, "tags:", selectedTags);
-};
+  const range = document.createRange();
+  range.selectNodeContents(ta);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+  ta.setSelectionRange(0, 999999);
+
+  let ok = false;
+  try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+  document.body.removeChild(ta);
+  return ok;
+}
+
+/* ---------- Single "Copy & Continue to Google" button ---------- */
+(function initGoogleButton() {
+  const btn = document.getElementById("googleBtn");
+  if (!btn) return;
+
+  const label = btn.querySelector(".cta-label") || btn;
+  const originalLabel = label.textContent;
+  let busy = false;
+
+  btn.addEventListener("click", () => {
+    if (busy) return;
+    busy = true;
+
+    const text = document.getElementById("reviewText").value;
+    const url  = "https://search.google.com/local/writereview?placeid=" + PLACE_ID;
+
+    // 1. Copy SYNCHRONOUSLY — still inside the user gesture.
+    //    Do NOT await anything before this line.
+    const ok = copyToClipboard(text);
+
+    // 2. Start the fill animation immediately.
+    btn.classList.add("filling");
+    label.textContent = "Copied!";
+
+    // 3. Analytics (safe — fires before navigation)
+    console.log("[review_event] handoff, rating:", rating, "tags:", selectedTags);
+
+    if (!ok) {
+      // Clipboard failed — don't navigate with an empty clipboard.
+      showToast("Couldn't copy — long-press the review text to copy it");
+      btn.classList.remove("filling");
+      label.textContent = originalLabel;
+      busy = false;
+      return;
+    }
+
+    // 4. After the fill animation, navigate.
+    //    Use window.location.href (NOT window.open) — same-tab nav is
+    //    never blocked by iOS Safari's popup blocker.
+    setTimeout(() => {
+      label.textContent = "Opening Google…";
+      setTimeout(() => { window.location.href = url; }, 200);
+    }, 800);
+  });
+})();
 
 const stepLabels = ["Step 1 of 3 · How was your visit?", "Step 2 of 3 · A few details", "Step 3 of 3 · Your review"];
-function gotoStep(n) {
+ffunction gotoStep(n) {
   document.querySelectorAll(".step").forEach(s => s.classList.remove("active"));
   document.getElementById("step" + n).classList.add("active");
   document.getElementById("stepLabel").textContent = stepLabels[n - 1];
+
+  document.querySelectorAll(".step-dot").forEach(dot => {
+    const step = parseInt(dot.dataset.step, 10);
+    dot.classList.toggle("active", step === n);
+    dot.classList.toggle("completed", step < n);
+  });
+
   if (n === 2) renderTags();
 }
-
 function resetFunnel() {
   rating = 0; selectedTags = [];
   [...starsEl.children].forEach(s => s.classList.remove("filled"));

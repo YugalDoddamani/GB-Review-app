@@ -52,3 +52,85 @@ body { display: flex; justify-content: center; padding: 40px 16px 56px; min-heig
   border: 1px solid var(--line-default);
   animation: fade-slide 0.5s var(--ease-out) both;
 }
+
+/* ---- CTA button with left-to-right fill ---- */
+.cta-btn {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 16px 24px;
+  border: none;
+  border-radius: 12px;
+  background: var(--brand, #2563eb);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  isolation: isolate;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s ease;
+}
+.cta-btn:active { transform: scale(0.98); }
+
+.cta-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #16a34a;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 0;
+}
+.cta-btn.filling::before { transform: scaleX(1); }
+
+.cta-label {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ---- Stepper checkmarks ---- */
+.stepper {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+.step-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.35);
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  transition: background 0.3s, color 0.3s, box-shadow 0.3s, transform 0.3s;
+}
+.step-dot.active {
+  background: var(--brand-soft);
+  color: var(--brand);
+  box-shadow: 0 0 0 2px var(--brand);
+  transform: scale(1.1);
+}
+.step-dot.completed {
+  background: #16a34a;
+  color: transparent;
+  position: relative;
+}
+.step-dot.completed::after {
+  content: "✓";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 13px;
+}
